@@ -1,0 +1,22 @@
+services:
+  chat_service:
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    image: chat_service
+    container_name: chat_service_container
+    command: python manage.py runserver 0.0.0.0:800
+    depends_on:
+      - redis
+
+  redis:
+    restart: always
+    image: redis
+    ports:
+      - 6379:6379
+    container_name: redis_chat_container
