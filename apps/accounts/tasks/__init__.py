@@ -1,0 +1,1 @@
+from .email_tasks import send_user_registered_otp_task
