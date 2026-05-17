@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.generics import GenericAPIView
 from apps.accounts.api.serializers import (
-    UserRegistrationSerializer, UserLoginSerializer
+    UserRegistrationSerializer, UserLoginSerializer, UserSerializer
 )
 from apps.accounts.services import AuthService
 from core.responses import ApiResponse
@@ -42,16 +42,17 @@ class UserLoginAPIView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        otp = AuthService.register(
+        data = AuthService.login(
             email=serializer.validated_data['email'],
             password=serializer.validated_data['password']
         )
 
+        user_data = UserSerializer(data['user']).data
+        user_data['access'] = data['access']
+        user_data['refresh'] = data['refresh']
+
         return ApiResponse.success(
-            message="Otp has been sent to your email address.",
-            data={
-                "email": serializer.validated_data['email'],
-                "otp": otp
-            },
+            message="Login Successfull.",
+            data=user_data,
             status_code=status.HTTP_200_OK
         )
