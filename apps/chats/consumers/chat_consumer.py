@@ -45,7 +45,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return await super().disconnect(code)
     
     async def receive_json(self, content, **kwargs):
+        print('---Data Received in json by consumer------')
         message_text = content.get('text', '').strip()
+        print(message_text)
+
         # Guard clause: Don't process empty messages
         if not message_text:
             return
@@ -58,7 +61,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             sender_id=self.user.id,
             text=message_text,
         )
-        EventDispatcher.dispatch(event=event)
+        await EventDispatcher.dispatch(event=event)
+        print('Event Dispatched Successfully')
     
     async def send_chat(self, event):
         await self.send_json(event['data'])

@@ -12,6 +12,8 @@ DATABASES = {
     }
 }
 
+ASGI_APPLICATION = 'config.asgi.application'
+
 # Email Configuration for Development Mode
 EMAIL_BACKEND = config('EMAIL_BACKEND')
 EMAIL_HOST = config('EMAIL_HOST')

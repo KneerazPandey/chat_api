@@ -1,5 +1,5 @@
 from uuid import UUID
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from core.events import BaseEvent
 
 
@@ -9,6 +9,5 @@ class MessageSentEvent(BaseEvent):
     room_id: str | UUID
     sender_id: str | UUID
     text: str 
-    timestamp: str 
 
-    event_name = 'chats.message.sent.event'
+    event_name: str = field(default='chats.message.sent.event', init=False)

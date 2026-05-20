@@ -26,4 +26,4 @@ class Message(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.sender} in {self.conversation_id}: {self.text[:20]}"
+        return f"{self.sender} in {self.id}: {self.text[:20]}"

@@ -6,9 +6,11 @@ from .tasks import execute_event_handler_async
 class EventDispatcher:
     
     @staticmethod
-    def dispatch(event: BaseEvent):
+    async def dispatch(event: BaseEvent):
         # returns a list of dictionaries containing {"handler": func, "is_async_task": bool}
         handler_configs = EventRegistry.get_handlers(event_name=event.event_name)
+        # DEBUG PRINT: Let's see what got found!
+        print(f"🔍 [DISPATCHER DEBUG] Found {len(handler_configs)} handlers registered for event '{event.event_name}'")
 
         for config in handler_configs:
             handler = config["handler"]
@@ -16,7 +18,7 @@ class EventDispatcher:
             # 1. Check if the handler requested to remain local (e.g., for WebSockets)
             if not config["is_async_task"]:
                 try:
-                    handler(event)
+                    await handler(event)
                 except Exception as e:
                     print(f"Local handler execution failed: {e}")
                 continue  # Move directly to the next handler

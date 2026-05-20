@@ -7,6 +7,7 @@ from core.utils import Otp
 from core.exceptions.errors import EmailAlreadyExistsError
 from apps.accounts.events import UserRegisteredOtpRequestedEvent
 from core.events.dispatcher import EventDispatcher
+from asgiref.sync import async_to_sync
 
 
 class AuthService:
@@ -33,7 +34,7 @@ class AuthService:
             email=email,
             otp=otp,
         )
-        EventDispatcher.dispatch_sync(event=event)
+        async_to_sync(EventDispatcher.dispatch)(event=event)
 
         return otp
     
