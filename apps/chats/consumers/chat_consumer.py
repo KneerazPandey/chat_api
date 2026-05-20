@@ -1,7 +1,7 @@
 import uuid
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from apps.chats.selectors import RoomMemberSelector
-from apps.chats.events import MessageSentEvent
+from apps.chats.events import MessageSentEvent, UserTypingEvent, MessageReadReceiptEvent
 from core.events.dispatcher import EventDispatcher
 
 
@@ -46,23 +46,55 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     
     async def receive_json(self, content, **kwargs):
         print('---Data Received in json by consumer------')
+        event_type = content.get("type")
         message_text = content.get('text', '').strip()
-        print(message_text)
 
-        # Guard clause: Don't process empty messages
-        if not message_text:
+        # 1. Handle Typing Status
+        if event_type == "typing":
+            event = UserTypingEvent(
+                room_id=self.room_id,
+                user_id=self.scope["user"].id,
+                username=self.scope["user"].username,
+                is_typing=content.get("is_typing", False)
+            )
+            await EventDispatcher.dispatch_async(event)
             return
         
-        # 1. Initializing Event Data
-        message_id = str(uuid.uuid4())
-        event = MessageSentEvent(
-            message_id=message_id,
-            room_id=self.room_id,
-            sender_id=self.user.id,
-            text=message_text,
-        )
-        await EventDispatcher.dispatch(event=event)
-        print('Event Dispatched Successfully')
+        # 2. Handle Read Receipts
+        elif event_type == "read_receipt":
+            event = MessageReadReceiptEvent(
+                room_id=self.room_id,
+                user_id=self.scope["user"].id,
+                message_id=content.get("message_id")
+            )
+            await EventDispatcher.dispatch_async(event)
+            return
+        
+        # 3. Fallback to your existing MessageSentEvent logic
+        elif event_type == "message":
+            # Guard clause: Don't process empty messages
+            if not message_text:
+                return
+            
+            # 1. Initializing Event Data
+            message_id = str(uuid.uuid4())
+            event = MessageSentEvent(
+                message_id=message_id,
+                room_id=self.room_id,
+                sender_id=self.user.id,
+                text=message_text,
+            )
+            await EventDispatcher.dispatch(event=event)
     
     async def send_chat(self, event):
         await self.send_json(event['data'])
+
+    async def chat_typing_status(self, event):
+        """Triggered when user_typing_handler calls group_send"""
+        # Don't echo the typing indicator back to the person who is typing!
+        if event["user_id"] != str(self.scope["user"].id):
+            await self.send_json(event)
+
+    async def chat_message_read(self, event):
+        """Triggered when message_read_handler calls group_send"""
+        await self.send_json(event)

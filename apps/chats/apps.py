@@ -7,3 +7,5 @@ class ChatsConfig(AppConfig):
     def ready(self):
         from apps.chats.handlers import send_message_handler
         from apps.chats.handlers import save_message_handler
+        from apps.chats.handlers import message_read_handler
+        from apps.chats.handlers import user_typing_handler
